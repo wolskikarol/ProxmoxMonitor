@@ -69,12 +69,22 @@ def list_lxc(proxmox, node_name, lxclist_path=None):
     return filtered_containers
 
 
+def bytes_to_gb(value):
+    try:
+        return round(int(value) / (1024**3), 2)
+    except (TypeError, ValueError):
+        return 'N/A'
+
 def list_storage(proxmox, node_name):
     try:
         storages = proxmox.nodes(node_name).storage.get()
-        return [f" - {storage['storage']} (Type: {storage.get('type', 'unknown')}) - status: {storage.get('status', 'N/A')}" for storage in storages]
+        return [
+            f" - {s['storage']} (Type: {s.get('type', 'unknown')}) - available/total: {bytes_to_gb(s.get('avail'))}GB/{bytes_to_gb(s.get('total'))}GB"
+            for s in storages
+        ]
     except Exception as e:
         return [f"Error retrieving storage from node '{node_name}': {e}"]
+
 
 
 def main():
